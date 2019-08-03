@@ -1,4 +1,5 @@
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -10,28 +11,65 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.DriverManager;
 import java.sql.*;
+import java.util.concurrent.TimeUnit;
 
 public class Test1 {
-    //private static Connection connection;
-    public static Connection getConnect(){
-        try{
-            return DriverManager.getConnection("jdbc:sqlite:g://my.db");
+
+    public static void main(String[] args) throws InterruptedException, SQLException {
+        while (true) {
+        BD myBD = new BD();
+        String[] info = getCurrencyExchange("USD");
+        myBD.myInsert(info[0],info[1]);
+        myBD.mySelect();
+        TimeUnit.HOURS.sleep(12);
         }
-        catch (Exception e){
+
+    }
+
+
+    static Element getChildElement(Element root, String childName) {
+        NodeList children = root.getElementsByTagName(childName);
+        return (Element) children.item(0);
+    }
+
+    static String[] getCurrencyExchange(String charCode) {
+        String[] res = {"Date", "-", charCode};
+        try {
+            URL connect = new URL("http://www.cbr.ru/scripts/XML_daily.asp");
+            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilder.parse(connect.openStream());
+            res[0] = document.getDocumentElement().getAttribute("Date");
+
+            NodeList items = document.getElementsByTagName("Valute");
+            for (int i = 0; i < items.getLength(); i++) {
+                Element item = (Element) items.item(i);
+
+                String charCodeValue = getChildElement(item, "CharCode").getTextContent();
+                if (charCode.equals(charCodeValue)) {
+                    res[1] = getChildElement(item, "Value").getTextContent();
+                    return res;
+                }
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return res;
     }
+}
 
-    public static void main(String[] args) throws InterruptedException {
-        for(;;) {
+class BD{
 
-            myInsert();
-            mySelect();
-            Thread.sleep(12*60*60*1000);
+    public static Connection getConnect() throws SQLException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
+        return DriverManager.getConnection("jdbc:sqlite:g://my.db");
     }
+
     static void myCreate(){
         final String create = "CREATE TABLE if not exists CURRENCY_RATE(date TEXT PRIMARY KEY, value TEXT)";
         try(  Connection co = getConnect();
@@ -51,65 +89,27 @@ public class Test1 {
                 ResultSet rs = stmt.executeQuery(select);)
         {
             while(rs.next()){
-            String myDate = rs.getString("Date");
-            String myValue = rs.getString("Value");
-            System.err.println(myDate+"\t|\t"+myValue);
-        }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-    static void myInsert(){
-        final String sql = "INSERT OR IGNORE INTO CURRENCY_RATE (date, value) VALUES (?, ?)";
-        String[] info = MyFun("USD");
-        final String insert = "INSERT OR IGNORE INTO CURRENCY_RATE (date, value) VALUES ('"+info[0]+"', '"+ info[1] + "')";
-        try (   Connection co = getConnect();
-                //PreparedStatement stmt = co.prepareStatement(sql);
-                Statement stmt = co.createStatement();
-         )
-        {
-            stmt.executeUpdate(insert);
-            //System.err.println(info[0]+"  "+info[1]);
-            //stmt.setObject(1, info[0]);
-            //stmt.setObject(2, info[1]);
-            System.err.println("Complete");
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-
-
-    static String[] MyFun(String CharCode){
-        String[] res = {"Date","-", CharCode};
-        try {
-            URL connect = new URL("http://www.cbr.ru/scripts/XML_daily.asp");
-            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = documentBuilder.parse(connect.openStream());
-            res[0] = document.getDocumentElement().getAttribute("Date");
-            Node root = document.getDocumentElement();
-            NodeList lisps = root.getChildNodes();
-            for (int i = 0; i < lisps.getLength(); i++) {
-                Node lisp = lisps.item(i);
-                if (lisp.getNodeType() != Node.TEXT_NODE) {
-                    NodeList bookProps = lisp.getChildNodes();
-                    for(int j = 0; j < bookProps.getLength(); j++) {
-                        if(bookProps.item(j).getNodeName() == "CharCode" && CharCode.equals(bookProps.item(j).getChildNodes().item(0).getTextContent())){
-                            for(int z = 0; z <bookProps.getLength(); z++)
-                                if(bookProps.item(z).getNodeName() == "Value"){
-                                    res[1] = bookProps.item(z).getChildNodes().item(0).getTextContent();
-                                    return res;
-                            }
-                        }
-
-                    }
-                }
+                String myDate = rs.getString("Date");
+                String myValue = rs.getString("Value");
+                System.err.println(myDate+"\t|\t"+myValue);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.out);
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        return res;
+
     }
+    public static void myInsert(Object date, Object value) throws SQLException {
+        final String sql = "INSERT OR IGNORE INTO CURRENCY_RATE (date, value) VALUES (?, ?)";
+
+        try (
+                Connection c = getConnect();
+                PreparedStatement stmt = c.prepareStatement(sql)
+        ) {
+            stmt.setObject(1, date);
+            stmt.setObject(2, value);
+            stmt.execute();
+            //System.err.println("Complete: " + date + "\t" + value);
+        }
+    }
+
 }
