@@ -1,3 +1,5 @@
+import javafx.collections.ObservableList;
+
 import java.sql.*;
 
 public class DB {
@@ -28,7 +30,22 @@ public class DB {
             while (rs.next()) {
                 String myDate = rs.getString("Date");
                 String myValue = rs.getString("Value");
-                System.err.println(myDate + "\t|\t" + myValue);
+                //System.err.println(myDate + "\t|\t" + myValue);
+            }
+        }
+
+    }
+    public static void mySelectForTable(ObservableList<Parser.Item> myList) throws SQLException {
+        final String select = "SELECT date, value FROM CURRENCY_RATE ORDER BY date";
+        try(Connection co = getConnect();
+            Statement stmt = co.createStatement();
+            ResultSet rs = stmt.executeQuery(select);) {
+
+            while (rs.next()) {
+                String myDate = rs.getString("Date");
+                String myValue = rs.getString("Value");
+                myList.add(new Parser.Item(myDate,myValue,"USD"));
+                //System.err.println(myDate + "\t|\t" + myValue);
             }
         }
 
