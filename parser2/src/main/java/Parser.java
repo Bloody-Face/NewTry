@@ -16,7 +16,7 @@ public class Parser {
         private Item() {
         }
         // Конструктор для инициализации всех полей
-        private Item(String date, String charCode, String value) {
+        public Item(String date, String value,String charCode) {
             this.date = date;
             this.charCode = charCode;
             this.value = value;
