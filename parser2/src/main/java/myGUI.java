@@ -4,13 +4,17 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.scene.control.cell.PropertyValueFactory;
 
 
 public class myGUI extends Application {
@@ -25,7 +29,7 @@ public class myGUI extends Application {
     public void start(Stage stage) {
         Scene scene = new Scene(new Group());
         stage.setTitle("Table View Sample");
-        stage.setWidth(300);
+        stage.setWidth(800);
         stage.setHeight(500);
 
         final Label label = new Label("Exchange Rates");
@@ -36,10 +40,12 @@ public class myGUI extends Application {
         lastNameCol.setMinWidth(125);
         firstNameCol.setMinWidth(125);
         final VBox vbox = new VBox();
+        final HBox hbox = new HBox();
         vbox.setPadding(new Insets(10, 0, 0, 10));
         vbox.getChildren().addAll(label, table);
 
         table.getColumns().addAll(firstNameCol, lastNameCol);
+
 
         try{
             DB.mySelectForTable(myList);
@@ -54,8 +60,25 @@ public class myGUI extends Application {
                 new PropertyValueFactory<Parser.Item, String>("Value"));
 
 
-        ((Group) scene.getRoot()).getChildren().addAll(vbox);
 
+
+        //график
+        CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Date");
+
+        CategoryAxis yAxis = new CategoryAxis();
+        yAxis.setLabel("Value");
+
+        LineChart<String,String > lineChart = new LineChart<String,String>(xAxis,yAxis);
+        XYChart.Series<String,String> res = new XYChart.Series<>();
+        for(Parser.Item Dop : myList){
+            res.getData().add(new XYChart.Data<String,String>(Dop.getDate(),Dop.getValue()));
+        }
+
+        lineChart.getData().add(res);
+
+        hbox.getChildren().addAll(vbox, lineChart);
+        ((Group) scene.getRoot()).getChildren().addAll(hbox);
         stage.setScene(scene);
 
         stage.show();
