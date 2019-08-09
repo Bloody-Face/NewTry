@@ -1,10 +1,3 @@
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
@@ -13,6 +6,7 @@ public class Main {
         while (true) {
             try{
                 Parser.Item item = Parser.getCurrencyExchange("USD");
+                //DB.myCreate();
                 DB.myInsert(item.getDate(), item.getValue());
                 DB.mySelect();
                 TimeUnit.HOURS.sleep(12);

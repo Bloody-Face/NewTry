@@ -30,7 +30,7 @@ public class DB {
             while (rs.next()) {
                 String myDate = rs.getString("Date");
                 String myValue = rs.getString("Value");
-                //System.err.println(myDate + "\t|\t" + myValue);
+                System.err.println(myDate + "\t|\t" + myValue);
             }
         }
 
