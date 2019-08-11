@@ -25,10 +25,6 @@ public class myGUI extends Application {
 
     private XYChart.Series<String,Number> res = new XYChart.Series<>();
 
-    private TableColumn firstNameCol = new TableColumn("Date");
-
-    private TableColumn lastNameCol = new TableColumn("Value");
-
     public static void main(String[] args) {   launch(args);   }
     @Override
     public void start(Stage stage) {
@@ -41,6 +37,8 @@ public class myGUI extends Application {
         final Label label = new Label("Exchange Rates");
         label.setFont(new Font("Arial", 20));
 
+        TableColumn firstNameCol = new TableColumn("Date");
+        TableColumn lastNameCol = new TableColumn("Value");
         lastNameCol.setMinWidth(125);
         firstNameCol.setMinWidth(125);
         table.getColumns().addAll(firstNameCol, lastNameCol);
@@ -57,6 +55,11 @@ public class myGUI extends Application {
 
 
         refresh();
+        table.setItems(items);
+        firstNameCol.setCellValueFactory(
+                new PropertyValueFactory<Parser.Item, String>("Date"));
+        lastNameCol.setCellValueFactory(
+                new PropertyValueFactory<Parser.Item, String>("Value"));
         lineChart.getData().add(res);
 
 
@@ -86,12 +89,6 @@ public class myGUI extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        table.setItems(items);
-        firstNameCol.setCellValueFactory(
-                new PropertyValueFactory<Parser.Item, String>("Date"));
-        lastNameCol.setCellValueFactory(
-                new PropertyValueFactory<Parser.Item, String>("Value"));
-
         // График
         for(Parser.Item item : items){
             Float value = Float.valueOf(item.getValue().replace(",","."));
